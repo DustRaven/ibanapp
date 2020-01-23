@@ -6,6 +6,7 @@ namespace IBANApp
     {
         static void Main(string[] args)
         {
+            Header("IBAN Tool", "Version 1.0", ConsoleColor.Blue, 12);
             Menu();
         }
 
@@ -87,6 +88,43 @@ namespace IBANApp
             {
                 ConvertToIban();
             }
+        }
+        public static void Header(string title, string subtitle = "", ConsoleColor foreGroundColor = ConsoleColor.White, int padding = 0)
+        {
+            Console.Title = title + (subtitle != "" ? " - " + subtitle : "");
+            int maxWidth = (title.Length > subtitle.Length ? title.Length + padding + 2 : subtitle.Length + padding + 2);
+
+            
+
+            string titleString = PadString(maxWidth, title);
+            string subtitleString = PadString(maxWidth, subtitle);
+
+            string titleContent = CenterText(titleString, "║");
+            string subtitleContent = CenterText(subtitleString, "║");
+            string borderLine = new string('═', maxWidth);
+
+            Console.ForegroundColor = foreGroundColor;
+            Console.WriteLine(CenterText($"╔{borderLine}╗"));
+            Console.WriteLine(titleContent);
+            if (!string.IsNullOrEmpty(subtitle))
+            {
+                Console.WriteLine(subtitleContent);
+            }
+            Console.WriteLine(CenterText($"╚{borderLine}╝"));
+            Console.ResetColor();
+        }
+
+        public static string CenterText(string content, string decorationString = "")
+        {
+            int decoLength = decorationString != "" ? 2 * decorationString.Length : 1;
+            string left = new string(' ', (Console.WindowWidth / 2 - content.Length / 2) - decoLength);
+            return string.Format(left + decorationString + content + decorationString);
+        }
+
+        public static string PadString(int width, string content)
+        {
+            string padding = new string(' ', (width - content.Length) / 2);
+            return padding + content + padding;
         }
     }
 }
