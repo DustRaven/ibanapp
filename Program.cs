@@ -29,30 +29,46 @@ namespace IBANApp
             iban[3] = accountNumber;
 
             iban[1] = CalculateChecksum(iban).ToString();
+            Console.WriteLine("Ihre IBAN lautet {0}", iban[0] + iban[1] + iban[2] + iban[3]);
         }
 
         static int CalculateChecksum(string[] iban)
+        {
+            int checksum = decimal.ToInt32(98 - IbanToDecimal(iban) % 97);
+            return decimal.ToInt32(checksum);
+        }
+
+        static bool ValidateIban(string[] iban, int checksum)
+        {
+            string[] temporaryIban = new string[4];
+            temporaryIban[0] = iban[0];
+            temporaryIban[1] = checksum.ToString();
+            temporaryIban[2] = iban[2];
+            temporaryIban[3] = iban[3];
+
+            decimal test = IbanToDecimal(temporaryIban);
+            decimal result = test % 97;
+            return decimal.ToInt32(test % 97) == 1;
+        }
+
+        static decimal IbanToDecimal(string[] iban)
         {
             char[] countryCode = iban[0].ToCharArray();
             int[] letterToNumber = new int[2];
             letterToNumber[0] = countryCode[0] - 55;
             letterToNumber[1] = countryCode[1] - 55;
-
-            string completeString = iban[2] + iban[3] + letterToNumber[0] + letterToNumber[1] + iban[1];
-            double toCalculate = double.Parse(completeString);
-            double checksum = 98 - (toCalculate % 97);
-
-            return 0;
-        }
-
-        static void ValidateIban()
-        {
-
+            
+            return decimal.Parse(iban[2] + iban[3] + letterToNumber[0] + letterToNumber[1] + iban[1]);
         }
 
         static void ConvertToIban()
         {
 
+        }
+
+        static void Validate()
+        {
+            
         }
 
         static void Menu()
@@ -81,7 +97,7 @@ namespace IBANApp
 
             if (action == 2)
             {
-                ValidateIban();
+                Validate();
             }
 
             if (action == 3)
