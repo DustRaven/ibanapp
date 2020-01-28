@@ -44,8 +44,8 @@ namespace IBANApp
             iban[2] = bankNumber;
             iban[3] = accountNumber;
 
-            int checksum = CalculateChecksum(iban);
-            if(ValidateIban(iban, checksum))
+            int checksum = CalculateChecksum(ref iban);
+            if(ValidateIban(ref iban, checksum))
             {
                 iban[1] = checksum.ToString();
             }
@@ -56,25 +56,22 @@ namespace IBANApp
             Console.ReadLine();
         }
 
-        private static int CalculateChecksum(string[] iban)
+        private static int CalculateChecksum(ref string[] iban)
         {
-            int checksum = decimal.ToInt32(98 - IbanToDecimal(iban) % 97);
+            int checksum = decimal.ToInt32(98 - IbanToDecimal(ref iban) % 97);
             return decimal.ToInt32(checksum);
         }
 
-        private static bool ValidateIban(string[] iban, int checksum)
+        private static bool ValidateIban(ref string[] iban, int checksum)
         {
-            string[] temporaryIban = new string[4];
-            temporaryIban[0] = iban[0];
-            temporaryIban[1] = checksum.ToString();
-            temporaryIban[2] = iban[2];
-            temporaryIban[3] = iban[3];
+            // string[] temporaryIban = new string[4];
+            iban[1] = checksum.ToString();
 
-            decimal test = IbanToDecimal(temporaryIban);
+            decimal test = IbanToDecimal(ref iban);
             return decimal.ToInt32(test % 97) == 1;
         }
 
-        private static decimal IbanToDecimal(string[] iban)
+        private static decimal IbanToDecimal(ref string[] iban)
         {
             char[] countryCode = iban[0].ToCharArray();
             int[] letterToNumber = new int[2];
