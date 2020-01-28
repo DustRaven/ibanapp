@@ -95,10 +95,16 @@ namespace IBANApp
 
         static void ConvertToIban()
         {
+            // TODO: Bulk-Konvertierung
+            ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", 'i');
+            Console.ReadLine();
         }
 
         static void Validate()
         {
+            // TODO: IBAN-Validierung
+            ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", 'i');
+            Console.ReadLine();
         }
 
         static int Menu()
