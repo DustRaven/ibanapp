@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Text;
 using ibanapp;
 
 namespace IBANApp
@@ -93,7 +95,76 @@ namespace IBANApp
 
         private static void BulkConvert()
         {
-            
+            int action;
+            while ((action = BulkMenu()) != 3)
+            {
+                switch (action)
+                {
+                    case 1:
+                        AccountToIban();
+                        break;
+                    case 2:
+                        IbanToAccount();
+                        break;
+                }
+            }
+        }
+
+        private static void AccountToIban()
+        {
+            Console.Clear();
+            Prettier.Banner("Massenkonvertierung", "Klassische Kontodaten zu IBAN", padding: 10);
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("Bitte geben Sie den Namen der zu konvertierenden Datei an: ");
+            int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
+            string fileName = GetFilename(cursorPosition);
+
+            using (StreamReader reader = new StreamReader(fileName))
+            {
+                string headers = "";
+                if ((headers = reader.ReadLine()) != null)
+                {
+
+                }
+
+            }
+
+            Console.ReadLine();
+        }
+
+        private static void IbanToAccount()
+        {
+            // TODO: IBAN to Account implementierung
+            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
+            Console.ReadLine();
+        }
+
+        private static void ShowBulkInstructions()
+        {
+            Console.WriteLine("Die Daten müssen als .csv Datei in folgendem Format vorliegen:");
+            Console.WriteLine("Kontonummer,BLZ");
+            Console.WriteLine("12345678,2105017000");
+        }
+
+        private static string GetFilename(int[] cursorPosition)
+        {
+            bool valid = false;
+            string fileName = "";
+
+            while (!valid)
+            {
+                valid = (fileName = Console.ReadLine()) != null;
+
+                if (!valid | !File.Exists(fileName))
+                {
+                    Prettier.ShowMessage($"Die Datei {fileName} existiert nicht oder kann nicht gelesen werden!", Prettier.MessageKind.Error, cursorPosition);
+                    Prettier.ClearLine(cursorPosition);
+                    valid = false;
+                }
+            }
+
+            return fileName;
         }
 
         private static void Validate()
@@ -111,6 +182,7 @@ namespace IBANApp
 
             Console.WriteLine("(1) Kontonummern und Bankleitzahlen -> IBAN");
             Console.WriteLine("(2) IBAN -> Kontonummern und Bankleitzahlen");
+            Console.WriteLine();
             Console.WriteLine("(3) Zurück zum Hauptmenü");
 
             return GetUserChoice(1, 3);
@@ -125,6 +197,7 @@ namespace IBANApp
             Console.WriteLine("(1) IBAN aus BLZ und Kontonummer generieren");
             Console.WriteLine("(2) IBAN verifizieren");
             Console.WriteLine("(3) Liste von BLZ und Kontonummer in IBAN konvertieren");
+            Console.WriteLine();
             Console.WriteLine("(4) Beenden");
 
             return GetUserChoice(1, 4);
@@ -146,7 +219,7 @@ namespace IBANApp
 
                 if (valid == false | (action < min || action > max))
                 {
-                    Prettier.ShowMessage("Bitte eine Zahl zwischen 1 und 4 eingeben!", Prettier.MessageKind.Error, cursorPosition);
+                    Prettier.ShowMessage($"Bitte eine Zahl zwischen {min} und {max} eingeben!", Prettier.MessageKind.Error, cursorPosition);
                     Prettier.ClearLine(cursorPosition);
                     valid = false;
                 }
