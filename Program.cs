@@ -52,7 +52,7 @@ namespace IBANApp
             Console.Clear();
             string result = string.Concat(iban);
             Prettier.Banner($"Ihre IBAN lautet {FormatIban(ref result)}", padding: 20, centerVertical: true);
-            Prettier.ShowMessage("Mit [ENTER] gelangen Sie zurück zum Menü", Prettier.MessageKind.success);
+            Prettier.ShowMessage("Mit [ENTER] gelangen Sie zurück zum Menü", Prettier.MessageKind.Success);
             Console.ReadLine();
         }
 
@@ -98,22 +98,25 @@ namespace IBANApp
         private static void ConvertToIban()
         {
             // TODO: Bulk-Konvertierung
-            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.info);
+            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
             Console.ReadLine();
         }
 
         private static void Validate()
         {
             // TODO: IBAN-Validierung
-            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.info);
+            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
             Console.ReadLine();
         }
 
         private static int Menu()
         {
+            int action = 0;
+            bool valid = false;
+
             Console.Clear();
             Prettier.Banner("IBAN Tool", "Version 1.0", ConsoleColor.Blue, 12);
-            int action = 0;
+            Console.WriteLine();
 
             Console.WriteLine("(1) IBAN aus BLZ und Kontonummer generieren");
             Console.WriteLine("(2) IBAN verifizieren");
@@ -123,7 +126,6 @@ namespace IBANApp
             Console.Write("Bitte wählen Sie eine Aktion: ");
             Console.ResetColor();
             int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
-            bool valid = false;
 
             while (!valid)
             {
@@ -131,7 +133,7 @@ namespace IBANApp
 
                 if (valid == false | (action <= 0 || action > 4))
                 {
-                    Prettier.ShowMessage("Bitte eine Zahl zwischen 1 und 4 eingeben!", Prettier.MessageKind.error, cursorPosition);
+                    Prettier.ShowMessage("Bitte eine Zahl zwischen 1 und 4 eingeben!", Prettier.MessageKind.Error, cursorPosition);
                     Prettier.ClearLine(cursorPosition);
                     valid = false;
                 }

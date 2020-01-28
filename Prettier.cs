@@ -8,9 +8,9 @@ namespace ibanapp
     {
         public enum MessageKind
         {
-            info,
-            error,
-            success
+            Info,
+            Error,
+            Success
         }
         /// <summary>
         /// Shows a bordered banner
@@ -96,13 +96,13 @@ namespace ibanapp
             Console.SetCursorPosition(Console.WindowWidth / 2 - (message.Length / 2), Console.WindowHeight - 10);
             switch (kind)
             {
-                case MessageKind.error:
+                case MessageKind.Error:
                     Console.ForegroundColor = ConsoleColor.Red;
                     break;
-                case MessageKind.info:
+                case MessageKind.Info:
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     break;
-                case MessageKind.success:
+                case MessageKind.Success:
                     Console.ForegroundColor = ConsoleColor.Green;
                     break;
             }
