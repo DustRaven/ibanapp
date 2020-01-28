@@ -1,10 +1,11 @@
 ﻿using System;
+using ibanapp;
 
 namespace IBANApp
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             int action;
             while ((action = Menu()) != 4)
@@ -24,42 +25,44 @@ namespace IBANApp
             }
 
             Console.Clear();
-            Banner("Vielen Dank für die Benutzung des Programms!", "Auf Wiedersehen!", padding: 10);
+            Prettier.Banner("Vielen Dank für die Benutzung des Programms!", "Auf Wiedersehen!", padding: 10);
         }
 
-        static void Generate()
+        private static void Generate()
         {
-            string accountNumber;
-            string bankNumber;
             string[] iban = new string[4];
 
             Console.Clear();
             Console.Write("Bitte geben Sie eine Kontonummer ein: ");
-            accountNumber = Console.ReadLine()?.Replace(" ", string.Empty);
+            string accountNumber = Console.ReadLine()?.Replace(" ", string.Empty);
 
             Console.Write("Bitte die BLZ eingeben: ");
-            bankNumber = Console.ReadLine()?.Replace(" ", string.Empty);
+            string bankNumber = Console.ReadLine()?.Replace(" ", string.Empty);
 
             iban[0] = "DE";
             iban[1] = "00";
             iban[2] = bankNumber;
             iban[3] = accountNumber;
 
-            iban[1] = CalculateChecksum(iban).ToString();
+            int checksum = CalculateChecksum(iban);
+            if(ValidateIban(iban, checksum))
+            {
+                iban[1] = checksum.ToString();
+            }
             Console.Clear();
             string result = string.Concat(iban);
-            Banner($"Ihre IBAN lautet {FormatIban(ref result)}", padding: 20, centerVertical: true);
-            ShowMessage("Mit [ENTER] gelangen Sie zurück zum Menü", 's');
+            Prettier.Banner($"Ihre IBAN lautet {FormatIban(ref result)}", padding: 20, centerVertical: true);
+            Prettier.ShowMessage("Mit [ENTER] gelangen Sie zurück zum Menü", Prettier.MessageKind.success);
             Console.ReadLine();
         }
 
-        static int CalculateChecksum(string[] iban)
+        private static int CalculateChecksum(string[] iban)
         {
             int checksum = decimal.ToInt32(98 - IbanToDecimal(iban) % 97);
             return decimal.ToInt32(checksum);
         }
 
-        static bool ValidateIban(string[] iban, int checksum)
+        private static bool ValidateIban(string[] iban, int checksum)
         {
             string[] temporaryIban = new string[4];
             temporaryIban[0] = iban[0];
@@ -68,11 +71,10 @@ namespace IBANApp
             temporaryIban[3] = iban[3];
 
             decimal test = IbanToDecimal(temporaryIban);
-            decimal result = test % 97;
             return decimal.ToInt32(test % 97) == 1;
         }
 
-        static decimal IbanToDecimal(string[] iban)
+        private static decimal IbanToDecimal(string[] iban)
         {
             char[] countryCode = iban[0].ToCharArray();
             int[] letterToNumber = new int[2];
@@ -82,7 +84,7 @@ namespace IBANApp
             return decimal.Parse(iban[2] + iban[3] + letterToNumber[0] + letterToNumber[1] + iban[1]);
         }
 
-        static ref string FormatIban(ref string iban)
+        private static ref string FormatIban(ref string iban)
         {
             for (int i = 4; i <= iban.Length; i += 4)
             {
@@ -93,24 +95,24 @@ namespace IBANApp
             return ref iban;
         }
 
-        static void ConvertToIban()
+        private static void ConvertToIban()
         {
             // TODO: Bulk-Konvertierung
-            ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", 'i');
+            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.info);
             Console.ReadLine();
         }
 
-        static void Validate()
+        private static void Validate()
         {
             // TODO: IBAN-Validierung
-            ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", 'i');
+            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.info);
             Console.ReadLine();
         }
 
-        static int Menu()
+        private static int Menu()
         {
             Console.Clear();
-            Banner("IBAN Tool", "Version 1.0", ConsoleColor.Blue, 12);
+            Prettier.Banner("IBAN Tool", "Version 1.0", ConsoleColor.Blue, 12);
             int action = 0;
 
             Console.WriteLine("(1) IBAN aus BLZ und Kontonummer generieren");
@@ -129,133 +131,15 @@ namespace IBANApp
 
                 if (valid == false | (action <= 0 || action > 4))
                 {
-                    ShowMessage("Bitte eine Zahl zwischen 1 und 4 eingeben!", 'e', cursorPosition);
-                    ClearLine(cursorPosition);
+                    Prettier.ShowMessage("Bitte eine Zahl zwischen 1 und 4 eingeben!", Prettier.MessageKind.error, cursorPosition);
+                    Prettier.ClearLine(cursorPosition);
                     valid = false;
                 }
             }
 
-            ClearMessage();
+            Prettier.ClearMessage();
 
             return action;
-        }
-
-        public static void Banner(string title, string subtitle = "", ConsoleColor foreGroundColor = ConsoleColor.White,
-            int padding = 0, bool centerVertical = false)
-        {
-            int maxTitlePad = CalculateMaxPadding(padding, title.Length);
-            int maxSubtitlePad = CalculateMaxPadding(padding, subtitle.Length);
-
-            Console.Title = title + (subtitle != "" ? " - " + subtitle : "");
-            int maxWidth = (title.Length > subtitle.Length
-                ? title.Length + maxTitlePad + 2
-                : subtitle.Length + maxSubtitlePad + 2);
-
-
-            string titleString = PadString(maxWidth, title);
-            string subtitleString = PadString(maxWidth, subtitle);
-
-            string titleContent = CenterText(titleString, "║");
-            string subtitleContent = CenterText(subtitleString, "║");
-            string borderLine = new string('═', maxWidth);
-
-            Console.ForegroundColor = foreGroundColor;
-            if (centerVertical)
-            {
-                int contentHeight = 3 + (subtitle != "" ? 1 : 0);
-                Console.SetCursorPosition(0, (Console.WindowHeight - contentHeight) / 2);
-            }
-            Console.WriteLine(CenterText($"╔{borderLine}╗"));
-            Console.WriteLine(titleContent);
-            if (!string.IsNullOrEmpty(subtitle))
-            {
-                Console.WriteLine(subtitleContent);
-            }
-
-            Console.WriteLine(CenterText($"╚{borderLine}╝"));
-            Console.ResetColor();
-        }
-
-        public static int CalculateMaxPadding(int padding, int textLength)
-        {
-            if (Console.WindowWidth < textLength + 2 + padding)
-            {
-                return Console.WindowWidth - 2 - textLength;
-            }
-
-            return padding;
-        }
-
-        public static string CenterText(string content, string decorationString = "")
-        {
-            int decoLength = decorationString != "" ? 2 * decorationString.Length : 1;
-            string left = new string(' ', (Console.WindowWidth / 2 - content.Length / 2) - decoLength);
-            return string.Format(left + decorationString + content + decorationString);
-        }
-
-        public static string PadString(int width, string content)
-        {
-            string padding = new string(' ', (width - content.Length) / 2);
-            return padding + content + padding;
-        }
-
-        public static void ShowMessage(string message, char kind, int[] cursorPosition = null)
-        {
-            if (cursorPosition == null)
-            {
-                cursorPosition = new[] {Console.CursorLeft, Console.CursorTop};
-            }
-
-            ConsoleColor consoleColor = Console.ForegroundColor;
-            Console.SetCursorPosition(Console.WindowWidth / 2 - (message.Length / 2), Console.WindowHeight - 10);
-            switch (kind)
-            {
-                case 'e':
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    break;
-                case 'i':
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-                case 's':
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    break;
-            }
-
-            Console.Write(message);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
-            Console.ForegroundColor = consoleColor;
-        }
-
-        public static void ClearMessage()
-        {
-            int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
-            Console.SetCursorPosition(1, Console.WindowHeight - 10);
-            string clearString = new string(' ', Console.WindowWidth - 1);
-            Console.Write(clearString);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
-        }
-
-        public static void ClearHeight(int height)
-        {
-            int[] cursorPosition = new[] {Console.CursorLeft, Console.CursorTop};
-
-            Console.SetCursorPosition(0, Console.WindowHeight - height);
-            for (int postition = 0; postition < height; postition++)
-            {
-                string clear = new string(' ', Console.WindowWidth);
-                Console.Write(clear);
-            }
-
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
-        }
-
-        public static void ClearLine(int[] cursorPosition)
-        {
-            int widthToClear = Console.WindowWidth - cursorPosition[0];
-            string clear = new string(' ', widthToClear);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
-            Console.Write(clear);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
         }
     }
 }
