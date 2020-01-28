@@ -8,7 +8,7 @@ namespace IBANApp
         public static void Main(string[] args)
         {
             int action;
-            while ((action = Menu()) != 4)
+            while ((action = MainMenu()) != 4)
             {
                 switch (action)
                 {
@@ -19,7 +19,7 @@ namespace IBANApp
                         Validate();
                         break;
                     case 3:
-                        ConvertToIban();
+                        BulkConvert();
                         break;
                 }
             }
@@ -64,7 +64,6 @@ namespace IBANApp
 
         private static bool ValidateIban(ref string[] iban, int checksum)
         {
-            // string[] temporaryIban = new string[4];
             iban[1] = checksum.ToString();
 
             decimal test = IbanToDecimal(ref iban);
@@ -92,11 +91,9 @@ namespace IBANApp
             return ref iban;
         }
 
-        private static void ConvertToIban()
+        private static void BulkConvert()
         {
-            // TODO: Bulk-Konvertierung
-            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
-            Console.ReadLine();
+            
         }
 
         private static void Validate()
@@ -106,11 +103,21 @@ namespace IBANApp
             Console.ReadLine();
         }
 
-        private static int Menu()
+        private static int BulkMenu()
         {
-            int action = 0;
-            bool valid = false;
+            Console.Clear();
+            Prettier.Banner("Massenkonvertierung", padding: 10);
+            Console.WriteLine();
 
+            Console.WriteLine("(1) Kontonummern und Bankleitzahlen -> IBAN");
+            Console.WriteLine("(2) IBAN -> Kontonummern und Bankleitzahlen");
+            Console.WriteLine("(3) Zurück zum Hauptmenü");
+
+            return GetUserChoice(1, 3);
+        }
+
+        private static int MainMenu()
+        {
             Console.Clear();
             Prettier.Banner("IBAN Tool", "Version 1.0", ConsoleColor.Blue, 12);
             Console.WriteLine();
@@ -119,6 +126,15 @@ namespace IBANApp
             Console.WriteLine("(2) IBAN verifizieren");
             Console.WriteLine("(3) Liste von BLZ und Kontonummer in IBAN konvertieren");
             Console.WriteLine("(4) Beenden");
+
+            return GetUserChoice(1, 4);
+        }
+
+        private static int GetUserChoice(int min, int max)
+        {
+            int action = 0;
+            bool valid = false;
+
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte wählen Sie eine Aktion: ");
             Console.ResetColor();
@@ -128,7 +144,7 @@ namespace IBANApp
             {
                 valid = int.TryParse(Console.ReadLine(), out action);
 
-                if (valid == false | (action <= 0 || action > 4))
+                if (valid == false | (action < min || action > max))
                 {
                     Prettier.ShowMessage("Bitte eine Zahl zwischen 1 und 4 eingeben!", Prettier.MessageKind.Error, cursorPosition);
                     Prettier.ClearLine(cursorPosition);
