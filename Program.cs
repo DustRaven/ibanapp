@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using ibanapp;
 
 namespace IBANApp
@@ -32,14 +31,25 @@ namespace IBANApp
 
         private static void Generate()
         {
-            string[] iban = new string[4];
-
             Console.Clear();
             Console.Write("Bitte geben Sie eine Kontonummer ein: ");
             string accountNumber = Console.ReadLine()?.Replace(" ", string.Empty);
 
             Console.Write("Bitte die BLZ eingeben: ");
             string bankNumber = Console.ReadLine()?.Replace(" ", string.Empty);
+
+            string[] iban = GenerateIban(bankNumber, accountNumber);
+            
+            Console.Clear();
+            string result = string.Concat(iban);
+            Prettier.Banner($"Ihre IBAN lautet {FormatIban(ref result)}", padding: 20, centerVertical: true);
+            Prettier.ShowMessage("Mit [ENTER] gelangen Sie zurück zum Menü", Prettier.MessageKind.Success);
+            Console.ReadLine();
+        }
+
+        private static string[] GenerateIban(string bankNumber, string accountNumber)
+        {
+            string[] iban = new string[4];
 
             iban[0] = "DE";
             iban[1] = "00";
@@ -51,11 +61,8 @@ namespace IBANApp
             {
                 iban[1] = checksum.ToString();
             }
-            Console.Clear();
-            string result = string.Concat(iban);
-            Prettier.Banner($"Ihre IBAN lautet {FormatIban(ref result)}", padding: 20, centerVertical: true);
-            Prettier.ShowMessage("Mit [ENTER] gelangen Sie zurück zum Menü", Prettier.MessageKind.Success);
-            Console.ReadLine();
+
+            return iban;
         }
 
         private static int CalculateChecksum(ref string[] iban)
@@ -95,59 +102,105 @@ namespace IBANApp
 
         private static void BulkConvert()
         {
-            int action;
-            while ((action = BulkMenu()) != 3)
-            {
-                switch (action)
-                {
-                    case 1:
-                        AccountToIban();
-                        break;
-                    case 2:
-                        IbanToAccount();
-                        break;
-                }
-            }
+            Console.Clear();
+            Prettier.Banner("Massenkonvertierung", "Klassische Kontodaten <-> IBAN", padding: 10);
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("Bitte geben Sie den Namen der zu konvertierenden Datei an: ");
+            int[] cursorPosition = { Console.CursorLeft, Console.CursorTop };
+            string fileName = GetFilename(cursorPosition);
+
+            string[] bankdata = ConvertBankData(fileName);
+            string outFileName = WriteConvertedData(bankdata);
+
+            Prettier.ShowMessage($"Die Daten wurden in der Datei {outFileName} gespeichert. Mit [ENTER] zum Menü...", Prettier.MessageKind.Success);
+            Console.ReadLine();
         }
 
-        private static void AccountToIban()
+        private static string[] ConvertBankData(string fileName)
+        {
+            long[] composition = GetComposition(fileName);
+            string[] converted = new string[composition[1]];
+            int counter = 0;
+            using (StreamReader reader = new StreamReader(fileName))
+            {
+                if (composition[0] == 1)
+                {
+                    reader.ReadLine();
+                }
+                
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string[] values = line.Split(",");
+                    if (values.Length > 1)
+                    {
+                        converted[counter] = string.Concat(GenerateIban(values[0], values[1]));
+                    }
+                    else
+                    {
+                        string bankNumber = line.Substring(4, 8);
+                        string accountNumber = line.Substring(12, 10);
+                        converted[counter] = string.Concat(bankNumber, ',', accountNumber);
+                    }
+                    counter++;
+                }
+            }
+
+            return converted;
+        }
+
+        private static string WriteConvertedData(string[] bankData)
         {
             Console.Clear();
             Prettier.Banner("Massenkonvertierung", "Klassische Kontodaten zu IBAN", padding: 10);
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
-            Console.Write("Bitte geben Sie den Namen der zu konvertierenden Datei an: ");
-            int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
-            string fileName = GetFilename(cursorPosition);
+            Console.Write("Bitte geben Sie den Namen der Zieldatei an: ");
+            int[] cursorPosition = { Console.CursorLeft, Console.CursorTop };
+            string fileName = GetFilename(cursorPosition, false);
+
+            using (StreamWriter writer = new StreamWriter(fileName, false))
+            {
+                if (bankData[0].Contains(','))
+                {
+                    writer.WriteLine("Kontonummer,Bankleitzahl");
+                }
+                else
+                {
+                    writer.WriteLine("IBAN");
+                }
+                foreach (string iban in bankData)
+                {
+                    writer.WriteLine(iban);
+                }
+            }
+
+            return fileName;
+        }
+
+        private static long[] GetComposition(string fileName)
+        {
+            long[] composition = new long[2];
+            composition[0] = 0;
 
             using (StreamReader reader = new StreamReader(fileName))
             {
-                string headers = "";
-                if ((headers = reader.ReadLine()) != null)
+                string line;
+                while ((line = reader.ReadLine()) != null)
                 {
-
+                    if (line.Contains("IBAN") ||line.Contains("Kontonummer"))
+                    {
+                        composition[0] = 1;
+                    }
+                    composition[1]++;
                 }
-
             }
 
-            Console.ReadLine();
+            return composition;
         }
 
-        private static void IbanToAccount()
-        {
-            // TODO: IBAN to Account implementierung
-            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
-            Console.ReadLine();
-        }
-
-        private static void ShowBulkInstructions()
-        {
-            Console.WriteLine("Die Daten müssen als .csv Datei in folgendem Format vorliegen:");
-            Console.WriteLine("Kontonummer,BLZ");
-            Console.WriteLine("12345678,2105017000");
-        }
-
-        private static string GetFilename(int[] cursorPosition)
+        private static string GetFilename(int[] cursorPosition, bool mustExist = true)
         {
             bool valid = false;
             string fileName = "";
@@ -156,7 +209,7 @@ namespace IBANApp
             {
                 valid = (fileName = Console.ReadLine()) != null;
 
-                if (!valid | !File.Exists(fileName))
+                if (!valid | !File.Exists(fileName) & mustExist)
                 {
                     Prettier.ShowMessage($"Die Datei {fileName} existiert nicht oder kann nicht gelesen werden!", Prettier.MessageKind.Error, cursorPosition);
                     Prettier.ClearLine(cursorPosition);
