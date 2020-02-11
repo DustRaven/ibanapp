@@ -342,6 +342,10 @@ namespace IBANApp
         private static int MainMenu()
         {
             Console.Clear();
+            if (DebugEnabled)
+            {
+                Prettier.DebugIndicator();
+            }
             Prettier.Banner("IBAN Tool", "Version 1.0", ConsoleColor.Blue, 12);
             Console.WriteLine();
 

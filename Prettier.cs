@@ -158,13 +158,14 @@ namespace ibanapp
         /// <summary>
         /// Shows that the program is in debug mode
         /// </summary>
-        /// <param name="cursorPosition"></param>
-        public static void DebugIndicator(CursorPosition cursorPosition)
+        public static void DebugIndicator()
         {
-            Console.SetCursorPosition(0,0);
+            Console.SetCursorPosition(Console.WindowWidth - 1, Console.WindowHeight - 1);
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write("D");
-            Console.SetCursorPosition(cursorPosition.Left, cursorPosition.Top);
+            Console.Write("D"); 
+            Console.SetCursorPosition(0, 0);
+            
+            Console.ResetColor();
         }
     }
 }

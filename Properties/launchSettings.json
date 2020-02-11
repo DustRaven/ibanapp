@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ibanapp": {
+      "commandName": "Project",
+      "commandLineArgs": "debug"
+    }
+  }
+}
