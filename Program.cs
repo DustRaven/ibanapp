@@ -35,11 +35,17 @@ namespace IBANApp
         private static void Generate()
         {
             Console.Clear();
+            Prettier.Banner("IBAN generieren", foreGroundColor: ConsoleColor.Blue, padding: 10);
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben Sie eine Kontonummer ein: ");
-            string accountNumber = Console.ReadLine()?.Replace(" ", string.Empty);
-
+            int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
+            string accountNumber = GetBankData(cursorPosition, 'k');
+            
             Console.Write("Bitte die BLZ eingeben: ");
-            string bankNumber = Console.ReadLine()?.Replace(" ", string.Empty);
+            cursorPosition[0] = Console.CursorLeft;
+            cursorPosition[1] = Console.CursorTop;
+            string bankNumber = GetBankData(cursorPosition, 'b');
 
             string[] iban = GenerateIban(bankNumber, accountNumber);
             
@@ -118,7 +124,7 @@ namespace IBANApp
         private static void BulkValidate()
         {
             Console.Clear();
-            Prettier.Banner("Massenvalidierung", "IBAN-Validierung", padding: 10);
+            Prettier.Banner("Massenvalidierung", "IBAN- Validierung", foreGroundColor:ConsoleColor.Blue, padding: 10);
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben Sie den Namen der zu validierenden Datei an: ");
@@ -126,7 +132,7 @@ namespace IBANApp
             string fileName = GetFilename(cursorPosition);
 
             long[] composition = GetComposition(fileName);
-            bool[] invalid = new bool[composition[1]];
+            string[] result = new string[composition[1]];
 
             using StreamReader reader = new StreamReader(fileName);
             string line;
@@ -134,16 +140,38 @@ namespace IBANApp
             while ((line = reader.ReadLine()) != null)
             {
                 string[] iban = new string[4];
-                if(composition[0] == 1) continue;
+                if (composition[0] == 1) continue;
                 iban[0] = line.Substring(0, 2);
                 iban[1] = line.Substring(2, 2);
                 iban[2] = line.Substring(4, 8);
                 iban[3] = line.Substring(12, 10);
 
                 int checksum = int.Parse(iban[1]);
-                invalid[counter] = ValidateIban(ref iban, checksum);
-                counter++;
+                if (!ValidateIban(ref iban, checksum))
+                {
+                    result[counter] = line;
+                    counter++;
+                }
             }
+
+            WriteInvalidIbans(result);
+        }
+
+        private static void WriteInvalidIbans(string[] ibanList)
+        {
+            string fileName = "invalid.csv";
+            using StreamWriter writer = new StreamWriter(fileName);
+            writer.WriteLine("Invalid IBANs");
+            foreach (string iban in ibanList)
+            {
+                if(iban != null) 
+                {
+                    writer.WriteLine(iban);
+                }
+            }
+
+            Prettier.ShowMessage($"Fehlerhafte IBANs wurden in die Datei {fileName} geschrieben. Mit [ENTER] zum Menü...", Prettier.MessageKind.Success);
+            Console.ReadLine();
         }
 
         private static string[] ConvertBankData(string fileName)
@@ -205,7 +233,7 @@ namespace IBANApp
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    if (line.Contains("IBAN"))
+                    if (line.Contains("IBAN") | line.Contains("Konto"))
                     {
                         composition[0] = 1;
                     }
@@ -233,12 +261,41 @@ namespace IBANApp
                 }
             }
 
+            Prettier.ClearMessage();
             return fileName;
+        }
+
+        private static string GetBankData(int[] cursorPosition, char type)
+        {
+            bool valid = false;
+            long input = 0;
+            int requiredLength = type == 'b' ? 8 : 10;
+            while(!valid)
+            {
+                valid = long.TryParse(Console.ReadLine()?.Replace(" ", string.Empty), out input);
+                if (!valid)
+                {
+                    Prettier.ShowMessage($"Ihre Eingabe ist ungültig!", Prettier.MessageKind.Error, cursorPosition);
+                    Prettier.ClearLine(cursorPosition);
+                }
+
+                if (input.ToString().Length != requiredLength)
+                {
+                    Prettier.ShowMessage($"Ihre Eingabe ist zu lang oder zu kurz!", Prettier.MessageKind.Error, cursorPosition);
+                    Prettier.ClearLine(cursorPosition);
+                    valid = false;
+                }
+            }
+            Prettier.ClearMessage();
+            return input.ToString();
         }
 
         private static void Validate()
         {
             Console.Clear();
+            Prettier.Banner("IBAN-Validierung", foreGroundColor: ConsoleColor.Blue, padding: 10);
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben sie eine Iban ein: ");
             string [] number = new string [3];
             string iban = Console.ReadLine()?.Replace(" ", "");
@@ -246,7 +303,7 @@ namespace IBANApp
             {
                 if (iban.Length != 22  )
                 {
-                    Prettier.ShowMessage("Fehler: Fehlerhafte IBAN. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
+                    Prettier.ShowMessage("Fehler: Fehlerhafte IBAN. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Error);
                     Console.ReadLine();
                 }
                 else
