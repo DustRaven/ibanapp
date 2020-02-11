@@ -52,12 +52,7 @@ namespace IBANApp
 
         private static string[] GenerateIban(string bankNumber, string accountNumber)
         {
-            string[] iban = new string[4];
-
-            iban[0] = "DE";
-            iban[1] = "00";
-            iban[2] = bankNumber;
-            iban[3] = accountNumber;
+            string[] iban = {"DE", "00", bankNumber, accountNumber};
 
             int checksum = CalculateChecksum(ref iban);
             if(ValidateIban(ref iban, checksum))
@@ -133,23 +128,21 @@ namespace IBANApp
             long[] composition = GetComposition(fileName);
             bool[] invalid = new bool[composition[1]];
 
-            using (StreamReader reader = new StreamReader(fileName))
+            using StreamReader reader = new StreamReader(fileName);
+            string line;
+            int counter = 0;
+            while ((line = reader.ReadLine()) != null)
             {
-                string line;
-                int counter = 0;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    string[] iban = new string[4];
-                    if(composition[0] == 1) continue;
-                    iban[0] = line.Substring(0, 2);
-                    iban[1] = line.Substring(2, 2);
-                    iban[2] = line.Substring(4, 8);
-                    iban[3] = line.Substring(12, 10);
+                string[] iban = new string[4];
+                if(composition[0] == 1) continue;
+                iban[0] = line.Substring(0, 2);
+                iban[1] = line.Substring(2, 2);
+                iban[2] = line.Substring(4, 8);
+                iban[3] = line.Substring(12, 10);
 
-                    int checksum = int.Parse(iban[1]);
-                    invalid[counter] = ValidateIban(ref iban, checksum);
-                    counter++;
-                }
+                int checksum = int.Parse(iban[1]);
+                invalid[counter] = ValidateIban(ref iban, checksum);
+                counter++;
             }
         }
 
@@ -245,23 +238,32 @@ namespace IBANApp
 
         private static void Validate()
         {
-            // TODO: IBAN-Validierung
-            Prettier.ShowMessage("Noch nicht implementiert. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
-            Console.ReadLine();
-        }
-
-        private static int BulkMenu()
-        {
             Console.Clear();
-            Prettier.Banner("Massenkonvertierung", padding: 10);
-            Console.WriteLine();
+            Console.Write("Bitte geben sie eine Iban ein: ");
+            string [] number = new string [3];
+            string iban = Console.ReadLine()?.Replace(" ", "");
+            if (iban != null)
+            {
+                if (iban.Length != 22  )
+                {
+                    Prettier.ShowMessage("Fehler: Fehlerhafte IBAN. Mit [ENTER] zum Menü zurückkehren...", Prettier.MessageKind.Info);
+                    Console.ReadLine();
+                }
+                else
+                {
+                    string[] ibanArray =
+                        {iban.Substring(0, 2), iban.Substring(2, 2), iban.Substring(4, 8), iban.Substring(12, 10)};
+                    bool valid = ValidateIban(ref ibanArray, int.Parse(ibanArray[1]));
+                    number[1] = iban.Substring(12, 10);
+                    number[2] = iban.Substring(4, 8);
+                    string validString = valid ? "gültig" : "ungültig";
+                    //Soll es eine ausgabe geben mit den einzelnen Daten oder nur eine Ausgabe die bestätigt, dass es eine IBAN ist?
+                    Prettier.Banner($"Konto-Nr.: {number[1]} BLZ: {number[2]}. Die IBAN ist {validString}.", padding: 20, centerVertical: true);
+                    //Console.WriteLine("Konto-Nr.:" + number[1] + "\n" + "BLZ:" + number[2]);
 
-            Console.WriteLine("(1) Kontonummern und Bankleitzahlen -> IBAN");
-            Console.WriteLine("(2) IBAN -> Kontonummern und Bankleitzahlen");
-            Console.WriteLine();
-            Console.WriteLine("(3) Zurück zum Hauptmenü");
-
-            return GetUserChoice(1, 3);
+                    Console.ReadLine();
+                }
+            }
         }
 
         private static int MainMenu()
