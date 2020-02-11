@@ -9,7 +9,7 @@ namespace IBANApp
         public static void Main(string[] args)
         {
             int action;
-            while ((action = MainMenu()) != 4)
+            while ((action = MainMenu()) != 5)
             {
                 switch (action)
                 {
@@ -21,6 +21,9 @@ namespace IBANApp
                         break;
                     case 3:
                         BulkConvert();
+                        break;
+                    case 4:
+                        BulkValidate();
                         break;
                 }
             }
@@ -103,7 +106,7 @@ namespace IBANApp
         private static void BulkConvert()
         {
             Console.Clear();
-            Prettier.Banner("Massenkonvertierung", "Klassische Kontodaten <-> IBAN", padding: 10);
+            Prettier.Banner("Massenkonvertierung", "Klassische Kontodaten zu IBAN", ConsoleColor.Blue, 10);
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben Sie den Namen der zu konvertierenden Datei an: ");
@@ -115,6 +118,39 @@ namespace IBANApp
 
             Prettier.ShowMessage($"Die Daten wurden in der Datei {outFileName} gespeichert. Mit [ENTER] zum Menü...", Prettier.MessageKind.Success);
             Console.ReadLine();
+        }
+
+        private static void BulkValidate()
+        {
+            Console.Clear();
+            Prettier.Banner("Massenvalidierung", "IBAN-Validierung", padding: 10);
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("Bitte geben Sie den Namen der zu validierenden Datei an: ");
+            int[] cursorPosition = { Console.CursorLeft, Console.CursorTop };
+            string fileName = GetFilename(cursorPosition);
+
+            long[] composition = GetComposition(fileName);
+            bool[] invalid = new bool[composition[1]];
+
+            using (StreamReader reader = new StreamReader(fileName))
+            {
+                string line;
+                int counter = 0;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string[] iban = new string[4];
+                    if(composition[0] == 1) continue;
+                    iban[0] = line.Substring(0, 2);
+                    iban[1] = line.Substring(2, 2);
+                    iban[2] = line.Substring(4, 8);
+                    iban[3] = line.Substring(12, 10);
+
+                    int checksum = int.Parse(iban[1]);
+                    invalid[counter] = ValidateIban(ref iban, checksum);
+                    counter++;
+                }
+            }
         }
 
         private static string[] ConvertBankData(string fileName)
@@ -137,12 +173,6 @@ namespace IBANApp
                     {
                         converted[counter] = string.Concat(GenerateIban(values[0], values[1]));
                     }
-                    else
-                    {
-                        string bankNumber = line.Substring(4, 8);
-                        string accountNumber = line.Substring(12, 10);
-                        converted[counter] = string.Concat(bankNumber, ',', accountNumber);
-                    }
                     counter++;
                 }
             }
@@ -153,7 +183,7 @@ namespace IBANApp
         private static string WriteConvertedData(string[] bankData)
         {
             Console.Clear();
-            Prettier.Banner("Massenkonvertierung", "Klassische Kontodaten zu IBAN", padding: 10);
+            Prettier.Banner("Massenkonvertierung", "Klassische Kontodaten zu IBAN", ConsoleColor.Blue, 10);
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben Sie den Namen der Zieldatei an: ");
@@ -162,14 +192,7 @@ namespace IBANApp
 
             using (StreamWriter writer = new StreamWriter(fileName, false))
             {
-                if (bankData[0].Contains(','))
-                {
-                    writer.WriteLine("Kontonummer,Bankleitzahl");
-                }
-                else
-                {
-                    writer.WriteLine("IBAN");
-                }
+                writer.WriteLine("IBAN");
                 foreach (string iban in bankData)
                 {
                     writer.WriteLine(iban);
@@ -189,7 +212,7 @@ namespace IBANApp
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    if (line.Contains("IBAN") ||line.Contains("Kontonummer"))
+                    if (line.Contains("IBAN"))
                     {
                         composition[0] = 1;
                     }
@@ -250,10 +273,11 @@ namespace IBANApp
             Console.WriteLine("(1) IBAN aus BLZ und Kontonummer generieren");
             Console.WriteLine("(2) IBAN verifizieren");
             Console.WriteLine("(3) Liste von BLZ und Kontonummer in IBAN konvertieren");
+            Console.WriteLine("(4) Liste von IBANs validieren");
             Console.WriteLine();
-            Console.WriteLine("(4) Beenden");
+            Console.WriteLine("(5) Beenden");
 
-            return GetUserChoice(1, 4);
+            return GetUserChoice(1, 5);
         }
 
         private static int GetUserChoice(int min, int max)
