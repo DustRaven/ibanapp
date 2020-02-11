@@ -1,4 +1,11 @@
-﻿using System;
+﻿/*
+ * Projekt: IBAN App
+ * Klasse: FIA95
+ * Namen: Samuel Wulf, Dennis Wilhelmy
+ * Datum: DateTime.Now()
+ */
+
+using System;
 using System.IO;
 using ibanapp;
 
@@ -6,8 +13,17 @@ namespace IBANApp
 {
     public class Program
     {
+        public static bool DebugEnabled;
         public static void Main(string[] args)
         {
+            if (args != null && args.Length > 0)
+            {
+                if (args[0] == "debug")
+                {
+                    DebugEnabled = true;
+                }
+            }
+
             int action;
             while ((action = MainMenu()) != 5)
             {
@@ -38,13 +54,13 @@ namespace IBANApp
             Prettier.Banner("IBAN generieren", foreGroundColor: ConsoleColor.Blue, padding: 10);
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
+
             Console.Write("Bitte geben Sie eine Kontonummer ein: ");
-            int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
+            CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             string accountNumber = GetBankData(cursorPosition, 'k');
             
             Console.Write("Bitte die BLZ eingeben: ");
-            cursorPosition[0] = Console.CursorLeft;
-            cursorPosition[1] = Console.CursorTop;
+            cursorPosition.UpdatePosition(Console.CursorLeft, Console.CursorTop);
             string bankNumber = GetBankData(cursorPosition, 'b');
 
             string[] iban = GenerateIban(bankNumber, accountNumber);
@@ -111,7 +127,7 @@ namespace IBANApp
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben Sie den Namen der zu konvertierenden Datei an: ");
-            int[] cursorPosition = { Console.CursorLeft, Console.CursorTop };
+            CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             string fileName = GetFilename(cursorPosition);
 
             string[] bankdata = ConvertBankData(fileName);
@@ -128,7 +144,7 @@ namespace IBANApp
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben Sie den Namen der zu validierenden Datei an: ");
-            int[] cursorPosition = { Console.CursorLeft, Console.CursorTop };
+            CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             string fileName = GetFilename(cursorPosition);
 
             long[] composition = GetComposition(fileName);
@@ -208,7 +224,7 @@ namespace IBANApp
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte geben Sie den Namen der Zieldatei an: ");
-            int[] cursorPosition = { Console.CursorLeft, Console.CursorTop };
+            CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             string fileName = GetFilename(cursorPosition, false);
 
             using (StreamWriter writer = new StreamWriter(fileName, false))
@@ -244,7 +260,7 @@ namespace IBANApp
             return composition;
         }
 
-        private static string GetFilename(int[] cursorPosition, bool mustExist = true)
+        private static string GetFilename(CursorPosition cursorPosition, bool mustExist = true)
         {
             bool valid = false;
             string fileName = "";
@@ -265,7 +281,7 @@ namespace IBANApp
             return fileName;
         }
 
-        private static string GetBankData(int[] cursorPosition, char type)
+        private static string GetBankData(CursorPosition cursorPosition, char type)
         {
             bool valid = false;
             long input = 0;
@@ -347,7 +363,7 @@ namespace IBANApp
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("Bitte wählen Sie eine Aktion: ");
             Console.ResetColor();
-            int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
+            CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
 
             while (!valid)
             {

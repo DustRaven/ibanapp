@@ -85,11 +85,11 @@ namespace ibanapp
         /// <param name="message">The message</param>
         /// <param name="kind">error, information or success</param>
         /// <param name="cursorPosition"></param>
-        public static void ShowMessage(string message, MessageKind kind, int[] cursorPosition = null)
+        public static void ShowMessage(string message, MessageKind kind, CursorPosition cursorPosition = null)
         {
             if (cursorPosition == null)
             {
-                cursorPosition = new[] {Console.CursorLeft, Console.CursorTop};
+                cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             }
 
             ConsoleColor consoleColor = Console.ForegroundColor;
@@ -108,7 +108,7 @@ namespace ibanapp
             }
 
             Console.Write(message);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
+            Console.SetCursorPosition(cursorPosition.Left, cursorPosition.Top);
             Console.ForegroundColor = consoleColor;
         }
 
@@ -117,11 +117,11 @@ namespace ibanapp
         /// </summary>
         public static void ClearMessage()
         {
-            int[] cursorPosition = {Console.CursorLeft, Console.CursorTop};
+            CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             Console.SetCursorPosition(1, Console.WindowHeight - 10);
             string clearString = new string(' ', Console.WindowWidth - 1);
             Console.Write(clearString);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
+            Console.SetCursorPosition(cursorPosition.Left, cursorPosition.Top);
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace ibanapp
         /// <param name="height">Count of lines to preserve</param>
         public static void ClearHeight(int height)
         {
-            int[] cursorPosition = new[] {Console.CursorLeft, Console.CursorTop};
+            CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
 
             Console.SetCursorPosition(0, Console.WindowHeight - height);
             for (int postition = 0; postition < height; postition++)
@@ -139,20 +139,32 @@ namespace ibanapp
                 Console.Write(clear);
             }
 
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
+            Console.SetCursorPosition(cursorPosition.Left, cursorPosition.Top);
         }
 
         /// <summary>
-        /// Clears a line from a given cursor position to the end of the line
+        /// Clears a line from a given cursor cursorPosition to the end of the line
         /// </summary>
         /// <param name="cursorPosition"></param>
-        public static void ClearLine(int[] cursorPosition)
+        public static void ClearLine(CursorPosition cursorPosition)
         {
-            int widthToClear = Console.WindowWidth - cursorPosition[0];
+            int widthToClear = Console.WindowWidth - cursorPosition.Left;
             string clear = new string(' ', widthToClear);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
+            Console.SetCursorPosition(cursorPosition.Left, cursorPosition.Top);
             Console.Write(clear);
-            Console.SetCursorPosition(cursorPosition[0], cursorPosition[1]);
+            Console.SetCursorPosition(cursorPosition.Left, cursorPosition.Top);
+        }
+
+        /// <summary>
+        /// Shows that the program is in debug mode
+        /// </summary>
+        /// <param name="cursorPosition"></param>
+        public static void DebugIndicator(CursorPosition cursorPosition)
+        {
+            Console.SetCursorPosition(0,0);
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write("D");
+            Console.SetCursorPosition(cursorPosition.Left, cursorPosition.Top);
         }
     }
 }
