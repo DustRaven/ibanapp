@@ -171,25 +171,28 @@ namespace IBANApp
             long[] composition = GetComposition(fileName);
             string[] result = new string[composition[1]];
 
-            using StreamReader reader = new StreamReader(fileName);
-            string line;
-            int counter = 0;
-            while ((line = reader.ReadLine()) != null)
+            using (StreamReader reader = new StreamReader(fileName))
             {
-                string[] iban = new string[4];
-                if (composition[0] == 1) continue;
-                iban[0] = line.Substring(0, 2);
-                iban[1] = line.Substring(2, 2);
-                iban[2] = line.Substring(4, 8);
-                iban[3] = line.Substring(12, 10);
-
-                int checksum = int.Parse(iban[1]);
-                if (!ValidateIban(ref iban, checksum))
+                string line;
+                int counter = 0;
+                while ((line = reader.ReadLine()) != null)
                 {
-                    result[counter] = line;
-                    counter++;
+                    string[] iban = new string[4];
+                    if (composition[0] == 1) continue;
+                    iban[0] = line.Substring(0, 2);
+                    iban[1] = line.Substring(2, 2);
+                    iban[2] = line.Substring(4, 8);
+                    iban[3] = line.Substring(12, 10);
+
+                    int checksum = int.Parse(iban[1]);
+                    if (!ValidateIban(ref iban, checksum))
+                    {
+                        result[counter] = line;
+                        counter++;
+                    }
                 }
             }
+            
 
             WriteInvalidIbans(result);
         }
@@ -197,13 +200,15 @@ namespace IBANApp
         private static void WriteInvalidIbans(string[] ibanList)
         {
             string fileName = "invalid.csv";
-            using StreamWriter writer = new StreamWriter(fileName);
-            writer.WriteLine("Invalid IBANs");
-            foreach (string iban in ibanList)
+            using(StreamWriter writer = new StreamWriter(fileName))
             {
-                if(iban != null) 
+                writer.WriteLine("Invalid IBANs");
+                foreach (string iban in ibanList)
                 {
-                    writer.WriteLine(iban);
+                    if (iban != null)
+                    {
+                        writer.WriteLine(iban);
+                    }
                 }
             }
 
