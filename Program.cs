@@ -26,7 +26,7 @@ namespace IBANApp
             }
 
             int action;
-            while ((action = MainMenu()) != 5)
+            while ((action = MainMenu()) != 6)
             {
                 switch (action)
                 {
@@ -41,6 +41,9 @@ namespace IBANApp
                         break;
                     case 4:
                         BulkValidate();
+                        break;
+                    case 5:
+                        DebugEnabled = !DebugEnabled;
                         break;
                 }
             }
@@ -374,9 +377,17 @@ namespace IBANApp
             Console.WriteLine("(3) Liste von BLZ und Kontonummer in IBAN konvertieren");
             Console.WriteLine("(4) Liste von IBANs validieren");
             Console.WriteLine();
-            Console.WriteLine("(5) Beenden");
+            if (!DebugEnabled)
+            {
+                Console.WriteLine("(5) Debug-Log aktivieren");
+            }
+            else
+            {
+                Console.WriteLine("(5) Debug-Log deaktivieren");
+            }
+            Console.WriteLine("(6) Beenden");
 
-            return GetUserChoice(1, 5);
+            return GetUserChoice(1, 6);
         }
 
         private static int GetUserChoice(int min, int max)
