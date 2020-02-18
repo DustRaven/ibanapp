@@ -21,6 +21,7 @@ namespace IBANApp
                 if (args[0] == "debug")
                 {
                     DebugEnabled = true;
+                    LogHelper.Log("Main | Program started. Debugging enabled.");
                 }
             }
 
@@ -58,15 +59,22 @@ namespace IBANApp
             Console.Write("Bitte geben Sie eine Kontonummer ein: ");
             CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             string accountNumber = GetBankData(cursorPosition, 'k');
+            if(DebugEnabled)
+                LogHelper.Log("Generate | Account number entered: " + accountNumber);
             
             Console.Write("Bitte die BLZ eingeben: ");
             cursorPosition.UpdatePosition(Console.CursorLeft, Console.CursorTop);
             string bankNumber = GetBankData(cursorPosition, 'b');
+            if(DebugEnabled)
+                LogHelper.Log("Generate | Bank number entered: " + bankNumber);
 
             string[] iban = GenerateIban(bankNumber, accountNumber);
             
             Console.Clear();
             string result = string.Concat(iban);
+            if(DebugEnabled)
+                LogHelper.Log("Generate | Generated IBAN: " + result);
+
             Prettier.Banner($"Ihre IBAN lautet {FormatIban(ref result)}", padding: 20, centerVertical: true);
             Prettier.ShowMessage("Mit [ENTER] gelangen Sie zurück zum Menü", Prettier.MessageKind.Success);
             Console.ReadLine();
@@ -77,6 +85,7 @@ namespace IBANApp
             string[] iban = {"DE", "00", bankNumber, accountNumber};
 
             int checksum = CalculateChecksum(ref iban);
+
             if(ValidateIban(ref iban, checksum))
             {
                 iban[1] = checksum.ToString();
@@ -88,15 +97,19 @@ namespace IBANApp
         private static int CalculateChecksum(ref string[] iban)
         {
             int checksum = decimal.ToInt32(98 - IbanToDecimal(ref iban) % 97);
+            if(DebugEnabled)
+                LogHelper.Log("CalculateChecksum | Checksum: " + checksum);
             return decimal.ToInt32(checksum);
         }
 
         private static bool ValidateIban(ref string[] iban, int checksum)
         {
             iban[1] = checksum.ToString();
-
             decimal test = IbanToDecimal(ref iban);
-            return decimal.ToInt32(test % 97) == 1;
+            bool valid = decimal.ToInt32(test % 97) == 1;
+            if(DebugEnabled)
+                LogHelper.Log("ValidateIban | Checksum valid: " + valid);
+            return valid;
         }
 
         private static decimal IbanToDecimal(ref string[] iban)
@@ -106,7 +119,10 @@ namespace IBANApp
             letterToNumber[0] = countryCode[0] - 55;
             letterToNumber[1] = countryCode[1] - 55;
 
-            return decimal.Parse(iban[2] + iban[3] + letterToNumber[0] + letterToNumber[1] + iban[1]);
+            decimal decimalIban = decimal.Parse(iban[2] + iban[3] + letterToNumber[0] + letterToNumber[1] + iban[1]);
+            if(DebugEnabled)
+                LogHelper.Log("IbanToDecimal | Decimal Iban: " + decimalIban);
+            return decimalIban;
         }
 
         private static ref string FormatIban(ref string iban)
@@ -129,6 +145,8 @@ namespace IBANApp
             Console.Write("Bitte geben Sie den Namen der zu konvertierenden Datei an: ");
             CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             string fileName = GetFilename(cursorPosition);
+            if(DebugEnabled)
+                LogHelper.Log("BulkConvert | Chosen filename (full path): " + Path.GetFullPath(fileName));
 
             string[] bankdata = ConvertBankData(fileName);
             string outFileName = WriteConvertedData(bankdata);
@@ -226,6 +244,8 @@ namespace IBANApp
             Console.Write("Bitte geben Sie den Namen der Zieldatei an: ");
             CursorPosition cursorPosition = new CursorPosition(Console.CursorLeft, Console.CursorTop);
             string fileName = GetFilename(cursorPosition, false);
+            if(DebugEnabled)
+                LogHelper.Log("WriteConvertedData | Chosen filename (full path): " + Path.GetFullPath(fileName));
 
             using (StreamWriter writer = new StreamWriter(fileName, false))
             {
@@ -267,7 +287,7 @@ namespace IBANApp
 
             while (!valid)
             {
-                valid = (fileName = Console.ReadLine()) != null;
+                valid = (fileName = Console.ReadLine()?.Replace("\"", string.Empty)) != null;
 
                 if (!valid | !File.Exists(fileName) & mustExist)
                 {
